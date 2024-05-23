@@ -1,22 +1,38 @@
-import { Injectable, NotImplementedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Task, TaskDocument } from './task.model';
 
 @Injectable()
 export class TaskService {
-    constructor() {}
+    constructor(
+        @InjectModel(Task.name) private taskModel: Model<TaskDocument>,
+    ) {}
 
-    addTask(name: string, userId: string, priority: number): Promise<void> {
-        throw new NotImplementedException();
+    async addTask(
+        name: string,
+        userId: string,
+        priority: string | number,
+    ): Promise<Task> {
+        const createdTask = this.taskModel.create({
+            name,
+            userId: new Types.ObjectId(userId),
+            priority,
+        });
+        return createdTask;
     }
 
-    getTaskByName(name: string): Promise<unknown> {
-        throw new NotImplementedException();
+    async getTaskByName(name: string): Promise<Task | null> {
+        return this.taskModel.findOne({ name }).exec();
     }
 
-    getUserTasks(userId: string): Promise<unknown[]> {
-        throw new NotImplementedException();
+    async getUserTasks(userId: string): Promise<Task[]> {
+        return this.taskModel
+            .find({ userId: new Types.ObjectId(userId) })
+            .exec();
     }
 
-    resetData(): Promise<void> {
-        throw new NotImplementedException();
+    async resetData(): Promise<void> {
+        await this.taskModel.deleteMany({}).exec();
     }
 }
